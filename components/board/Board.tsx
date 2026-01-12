@@ -516,18 +516,7 @@ export function Board({ boardId, userAvatarUrl, userName }: BoardProps) {
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-gradient-to-br from-blue-500 to-indigo-600">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-white/40 border-t-white" />
-        <div className="text-sm font-medium text-white">
-          ボードを読み込んでいます...
-        </div>
-      </div>
-    )
-  }
-
-  if (!board) {
+  if (!board && !isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-gray-600">ボードが見つかりません</div>
@@ -566,7 +555,7 @@ export function Board({ boardId, userAvatarUrl, userName }: BoardProps) {
                 className="text-3xl font-bold text-white cursor-pointer"
                 onClick={handleStartEditTitle}
               >
-                {board.title}
+                {board?.title || 'ボード'}
               </h1>
             )}
             <button
@@ -641,7 +630,7 @@ export function Board({ boardId, userAvatarUrl, userName }: BoardProps) {
             scrollbarColor: 'rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.1)',
           }}
         >
-          {board.lists.map((list) => (
+          {board?.lists.map((list) => (
           <List
             key={list.id}
             list={list}
@@ -653,7 +642,7 @@ export function Board({ boardId, userAvatarUrl, userName }: BoardProps) {
             onUpdateList={handleUpdateList}
           />
           ))}
-          <AddList onAdd={handleAddList} />
+          {board && <AddList onAdd={handleAddList} />}
         </div>
       </div>
 
@@ -671,6 +660,17 @@ export function Board({ boardId, userAvatarUrl, userName }: BoardProps) {
           </div>
         ) : null}
       </DragOverlay>
+
+      {isLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-3 rounded-xl bg-white p-6 shadow-xl">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
+            <div className="text-sm font-medium text-gray-700">
+              読み込み中...
+            </div>
+          </div>
+        </div>
+      )}
     </DndContext>
   )
 }
