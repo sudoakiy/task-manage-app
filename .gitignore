@@ -25,6 +25,7 @@
 *.pem
 .claude/
 z/
+.mcp.json
 
 # debug
 npm-debug.log*
