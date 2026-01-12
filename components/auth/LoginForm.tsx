@@ -7,11 +7,14 @@ import { useState } from 'react'
 
 export function LoginForm() {
   const supabase = createClient()
-  const [isSigningIn, setIsSigningIn] = useState(false)
+  const [signingInProvider, setSigningInProvider] = useState<
+    'google' | 'github' | null
+  >(null)
+  const isSigningIn = signingInProvider !== null
 
   const handleGoogleLogin = async () => {
     if (isSigningIn) return
-    setIsSigningIn(true)
+    setSigningInProvider('google')
     try {
       await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -20,13 +23,13 @@ export function LoginForm() {
         },
       })
     } finally {
-      setIsSigningIn(false)
+      setSigningInProvider(null)
     }
   }
 
   const handleGithubLogin = async () => {
     if (isSigningIn) return
-    setIsSigningIn(true)
+    setSigningInProvider('github')
     try {
       await supabase.auth.signInWithOAuth({
         provider: 'github',
@@ -35,7 +38,7 @@ export function LoginForm() {
         },
       })
     } finally {
-      setIsSigningIn(false)
+      setSigningInProvider(null)
     }
   }
 
@@ -48,7 +51,7 @@ export function LoginForm() {
         disabled={isSigningIn}
         aria-busy={isSigningIn}
       >
-        {isSigningIn ? (
+        {signingInProvider === 'google' ? (
           <>
             <Loader2 className="h-5 w-5 animate-spin" />
             認証中...
@@ -83,8 +86,9 @@ export function LoginForm() {
         variant="outline"
         className="w-full flex items-center justify-center gap-2 cursor-pointer"
         disabled={isSigningIn}
+        aria-busy={isSigningIn}
       >
-        {isSigningIn ? (
+        {signingInProvider === 'github' ? (
           <>
             <Loader2 className="h-5 w-5 animate-spin" />
             認証中...
