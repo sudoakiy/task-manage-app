@@ -13,12 +13,26 @@ export default async function Home() {
     redirect('/login')
   }
 
-  await prisma.user.upsert({
+  const existingUser = await prisma.user.upsert({
     where: { id: user.id },
     update: {},
     create: { id: user.id },
   })
 
+  // Try to redirect to last viewed board
+  if (existingUser.lastViewedBoardId) {
+    const lastViewedBoard = await prisma.board.findFirst({
+      where: {
+        id: existingUser.lastViewedBoardId,
+        userId: user.id,
+      },
+    })
+    if (lastViewedBoard) {
+      redirect(`/board/${lastViewedBoard.id}`)
+    }
+  }
+
+  // Otherwise, find most recent board
   let board = await prisma.board.findFirst({
     where: { userId: user.id },
     orderBy: { createdAt: 'desc' },

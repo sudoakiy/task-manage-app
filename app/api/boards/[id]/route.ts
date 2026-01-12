@@ -69,6 +69,12 @@ export async function GET(
       )
     }
 
+    // Update last viewed board
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastViewedBoardId: board.id },
+    })
+
     return NextResponse.json(board)
   } catch (error) {
     console.error('Error fetching board:', error)
