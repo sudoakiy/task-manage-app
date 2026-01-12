@@ -1,20 +1,24 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createClient } from '@/lib/supabase/server'
 
 export async function GET() {
   try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
     const boards = await prisma.board.findMany({
-      include: {
-        lists: {
-          orderBy: { position: 'asc' },
-          include: {
-            cards: {
-              where: { archived: false },
-              orderBy: { position: 'asc' },
-            },
-          },
-        },
-      },
+      where: { userId: user.id },
+      orderBy: { createdAt: 'desc' },
     })
     return NextResponse.json(boards)
   } catch (error) {
@@ -28,6 +32,18 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
     const { title } = await request.json()
 
     if (!title || typeof title !== 'string') {
@@ -37,8 +53,14 @@ export async function POST(request: Request) {
       )
     }
 
+    await prisma.user.upsert({
+      where: { id: user.id },
+      update: {},
+      create: { id: user.id },
+    })
+
     const board = await prisma.board.create({
-      data: { title },
+      data: { title, userId: user.id },
     })
 
     return NextResponse.json(board, { status: 201 })

@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { BoardWithLists, Card as CardType } from '@/types'
+import { useRouter } from 'next/navigation'
 import {
   DndContext,
   DragEndEvent,
@@ -24,13 +25,24 @@ interface BoardProps {
   userName?: string | null
 }
 
+interface BoardSummary {
+  id: string
+  title: string
+}
+
 export function Board({ boardId, userAvatarUrl, userName }: BoardProps) {
+  const router = useRouter()
   const [board, setBoard] = useState<BoardWithLists | null>(null)
+  const [boards, setBoards] = useState<BoardSummary[]>([])
+  const [isBoardMenuOpen, setIsBoardMenuOpen] = useState(false)
+  const [newBoardTitle, setNewBoardTitle] = useState('')
+  const [isCreatingBoard, setIsCreatingBoard] = useState(false)
   const [activeCard, setActiveCard] = useState<CardType | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [editedTitle, setEditedTitle] = useState('')
   const [isComposing, setIsComposing] = useState(false)
+  const boardMenuRef = useRef<HTMLDivElement | null>(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -44,6 +56,28 @@ export function Board({ boardId, userAvatarUrl, userName }: BoardProps) {
     fetchBoard()
   }, [boardId])
 
+  useEffect(() => {
+    fetchBoards()
+  }, [boardId])
+
+  useEffect(() => {
+    if (!isBoardMenuOpen) return
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        boardMenuRef.current &&
+        !boardMenuRef.current.contains(event.target as Node)
+      ) {
+        setIsBoardMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isBoardMenuOpen])
+
   const fetchBoard = async () => {
     try {
       const res = await fetch(`/api/boards/${boardId}`)
@@ -55,6 +89,50 @@ export function Board({ boardId, userAvatarUrl, userName }: BoardProps) {
       console.error('Failed to fetch board:', error)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const fetchBoards = async () => {
+    try {
+      const res = await fetch('/api/boards')
+      if (res.ok) {
+        const data = await res.json()
+        setBoards(data)
+      }
+    } catch (error) {
+      console.error('Failed to fetch boards:', error)
+    }
+  }
+
+  const handleSwitchBoard = (id: string) => {
+    setIsBoardMenuOpen(false)
+    if (id !== boardId) {
+      router.push(`/board/${id}`)
+    }
+  }
+
+  const handleCreateBoard = async () => {
+    if (!newBoardTitle.trim() || isCreatingBoard) return
+
+    setIsCreatingBoard(true)
+    try {
+      const res = await fetch('/api/boards', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: newBoardTitle.trim() }),
+      })
+
+      if (res.ok) {
+        const newBoard = await res.json()
+        setBoards((prev) => [newBoard, ...prev])
+        setNewBoardTitle('')
+        setIsBoardMenuOpen(false)
+        router.push(`/board/${newBoard.id}`)
+      }
+    } catch (error) {
+      console.error('Failed to create board:', error)
+    } finally {
+      setIsCreatingBoard(false)
     }
   }
 
@@ -462,31 +540,91 @@ export function Board({ boardId, userAvatarUrl, userName }: BoardProps) {
       >
         <div className="min-h-screen bg-gradient-to-br from-blue-500 to-indigo-600 p-6">
         <div className="mb-6 flex items-center justify-between">
-          {isEditingTitle ? (
-            <Input
-              value={editedTitle}
-              onChange={(e) => setEditedTitle(e.target.value)}
-              onCompositionStart={() => setIsComposing(true)}
-              onCompositionEnd={() => setIsComposing(false)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !isComposing) {
-                  handleSaveTitle()
-                } else if (e.key === 'Escape') {
-                  handleCancelEditTitle()
-                }
-              }}
-              onBlur={handleSaveTitle}
-              className="text-3xl font-bold text-white bg-white/10 border-white/30 focus:border-white max-w-xl"
-              autoFocus
-            />
-          ) : (
-            <h1
-              className="text-3xl font-bold text-white cursor-pointer"
-              onClick={handleStartEditTitle}
+          <div className="relative flex items-center gap-3" ref={boardMenuRef}>
+            {isEditingTitle ? (
+              <Input
+                value={editedTitle}
+                onChange={(e) => setEditedTitle(e.target.value)}
+                onCompositionStart={() => setIsComposing(true)}
+                onCompositionEnd={() => setIsComposing(false)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !isComposing) {
+                    handleSaveTitle()
+                  } else if (e.key === 'Escape') {
+                    handleCancelEditTitle()
+                  }
+                }}
+                onBlur={handleSaveTitle}
+                className="text-3xl font-bold text-white bg-white/10 border-white/30 focus:border-white max-w-xl"
+                autoFocus
+              />
+            ) : (
+              <h1
+                className="text-3xl font-bold text-white cursor-pointer"
+                onClick={handleStartEditTitle}
+              >
+                {board.title}
+              </h1>
+            )}
+            <button
+              type="button"
+              onClick={() => setIsBoardMenuOpen((prev) => !prev)}
+              className="rounded-full border border-white/30 px-3 py-1 text-sm font-medium text-white/90 transition hover:border-white/60 hover:text-white"
             >
-              {board.title}
-            </h1>
-          )}
+              Boards
+            </button>
+            {isBoardMenuOpen ? (
+              <div className="absolute left-0 top-full z-20 mt-3 w-72 rounded-xl border border-white/20 bg-white/95 p-3 text-sm text-gray-900 shadow-xl backdrop-blur">
+                <div className="max-h-64 overflow-y-auto">
+                  {boards.length === 0 ? (
+                    <div className="px-2 py-2 text-gray-500">
+                      No boards yet
+                    </div>
+                  ) : (
+                    boards.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => handleSwitchBoard(item.id)}
+                        className={`flex w-full items-center justify-between rounded-lg px-2 py-2 text-left transition hover:bg-gray-100 ${
+                          item.id === boardId ? 'bg-gray-100 font-semibold' : ''
+                        }`}
+                      >
+                        <span className="truncate">{item.title}</span>
+                        {item.id === boardId ? (
+                          <span className="text-xs text-gray-500">Current</span>
+                        ) : null}
+                      </button>
+                    ))
+                  )}
+                </div>
+                <div className="mt-3 border-t border-gray-200 pt-3">
+                  <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Create board
+                  </label>
+                  <Input
+                    value={newBoardTitle}
+                    onChange={(e) => setNewBoardTitle(e.target.value)}
+                    placeholder="New board title"
+                    className="h-9 text-sm text-gray-900"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleCreateBoard()
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleCreateBoard}
+                    disabled={!newBoardTitle.trim() || isCreatingBoard}
+                    className="mt-2 w-full rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+                  >
+                    Create Board
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </div>
           <div className="flex items-center gap-3">
             <UserAvatar name={userName ?? ''} src={userAvatarUrl ?? undefined} />
             <LogoutButton />

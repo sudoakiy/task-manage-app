@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,12 +10,23 @@ datasource db {
 model Board {
   id        String   @id @default(uuid())
   title     String
+  userId    String   @map("user_id")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  lists     List[]
+  user      User     @relation(fields: [userId], references: [id])
 
-  lists List[]
-
+  @@index([userId])
   @@map("boards")
+}
+
+model User {
+  id        String   @id
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  boards    Board[]
+
+  @@map("users")
 }
 
 model List {
@@ -28,9 +36,8 @@ model List {
   position  Int
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
-
-  board Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  cards Card[]
+  cards     Card[]
+  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
 
   @@map("lists")
 }
@@ -40,13 +47,12 @@ model Card {
   listId      String    @map("list_id")
   title       String
   description String?
-  dueDate     DateTime? @map("due_date")
   position    Int
   archived    Boolean   @default(false)
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
-
-  list List @relation(fields: [listId], references: [id], onDelete: Cascade)
+  dueDate     DateTime? @map("due_date")
+  list        List      @relation(fields: [listId], references: [id], onDelete: Cascade)
 
   @@map("cards")
 }
