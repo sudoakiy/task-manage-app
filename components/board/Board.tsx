@@ -431,11 +431,11 @@ export function Board({ boardId, userAvatarUrl, userName }: BoardProps) {
 
   return (
     <DndContext
-        sensors={sensors}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        <div className="min-h-screen bg-gradient-to-br from-blue-500 to-indigo-600 p-6">
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="min-h-screen bg-gradient-to-br from-blue-500 to-indigo-600 p-6">
         <div className="mb-6 flex items-center justify-between">
           {isEditingTitle ? (
             <Input
@@ -490,20 +490,20 @@ export function Board({ boardId, userAvatarUrl, userName }: BoardProps) {
         </div>
       </div>
 
-        <DragOverlay>
-          {activeCard ? (
-            <div className="bg-white rounded-lg p-3 shadow-2xl border-2 border-blue-500 w-80 rotate-6 transform scale-110 ring-4 ring-blue-200 ring-opacity-50">
-              <h3 className="text-sm font-medium text-gray-900">
-                {activeCard.title}
-              </h3>
-              {activeCard.description && (
-                <p className="text-xs text-gray-600 mt-2 line-clamp-2">
-                  {activeCard.description}
-                </p>
-              )}
-            </div>
-          ) : null}
-        </DragOverlay>
+      <DragOverlay>
+        {activeCard ? (
+          <div className="bg-white rounded-lg p-3 shadow-2xl border-2 border-blue-500 w-80 rotate-6 transform scale-110 ring-4 ring-blue-200 ring-opacity-50">
+            <h3 className="text-sm font-medium text-gray-900">
+              {activeCard.title}
+            </h3>
+            {activeCard.description && (
+              <p className="text-xs text-gray-600 mt-2 line-clamp-2">
+                {activeCard.description}
+              </p>
+            )}
+          </div>
+        ) : null}
+      </DragOverlay>
     </DndContext>
   )
 }
