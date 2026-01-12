@@ -168,6 +168,31 @@ export function Board({ boardId, userAvatarUrl, userName }: BoardProps) {
     listId: string,
     title: string
   ) => {
+    const optimisticId = `temp-${crypto.randomUUID()}`
+    const optimisticCard: CardType = {
+      id: optimisticId,
+      listId,
+      title,
+      description: null,
+      dueDate: null,
+      position: board?.lists.find((list) => list.id === listId)?.cards.length ?? 0,
+      archived: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
+
+    setBoard((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        lists: prev.lists.map((list) =>
+          list.id === listId
+            ? { ...list, cards: [...list.cards, optimisticCard] }
+            : list
+        ),
+      }
+    })
+
     try {
       const res = await fetch('/api/cards', {
         method: 'POST',
@@ -183,13 +208,47 @@ export function Board({ boardId, userAvatarUrl, userName }: BoardProps) {
             ...prev,
             lists: prev.lists.map((list) =>
               list.id === listId
-                ? { ...list, cards: [...list.cards, newCard] }
+                ? {
+                    ...list,
+                    cards: list.cards.map((card) =>
+                      card.id === optimisticId ? newCard : card
+                    ),
+                  }
+                : list
+            ),
+          }
+        })
+      } else {
+        setBoard((prev) => {
+          if (!prev) return prev
+          return {
+            ...prev,
+            lists: prev.lists.map((list) =>
+              list.id === listId
+                ? {
+                    ...list,
+                    cards: list.cards.filter((card) => card.id !== optimisticId),
+                  }
                 : list
             ),
           }
         })
       }
     } catch (error) {
+      setBoard((prev) => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          lists: prev.lists.map((list) =>
+            list.id === listId
+              ? {
+                  ...list,
+                  cards: list.cards.filter((card) => card.id !== optimisticId),
+                }
+              : list
+          ),
+        }
+      })
       console.error('Failed to add card:', error)
     }
   }
@@ -353,8 +412,11 @@ export function Board({ boardId, userAvatarUrl, userName }: BoardProps) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-gray-600">読み込み中...</div>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-gradient-to-br from-blue-500 to-indigo-600">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-white/40 border-t-white" />
+        <div className="text-sm font-medium text-white">
+          ボードを読み込んでいます...
+        </div>
       </div>
     )
   }
