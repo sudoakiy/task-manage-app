@@ -15,13 +15,16 @@ import { List } from './List'
 import { AddList } from './AddList'
 import { Card } from './Card'
 import { LogoutButton } from '@/components/auth/LogoutButton'
+import { UserAvatar } from '@/components/auth/UserAvatar'
 import { Input } from '@/components/ui/input'
 
 interface BoardProps {
   boardId: string
+  userAvatarUrl?: string | null
+  userName?: string | null
 }
 
-export function Board({ boardId }: BoardProps) {
+export function Board({ boardId, userAvatarUrl, userName }: BoardProps) {
   const [board, setBoard] = useState<BoardWithLists | null>(null)
   const [activeCard, setActiveCard] = useState<CardType | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -397,7 +400,10 @@ export function Board({ boardId }: BoardProps) {
               {board.title}
             </h1>
           )}
-          <LogoutButton />
+          <div className="flex items-center gap-3">
+            <UserAvatar name={userName ?? ''} src={userAvatarUrl ?? undefined} />
+            <LogoutButton />
+          </div>
         </div>
 
         <div
