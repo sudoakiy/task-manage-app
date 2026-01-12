@@ -1,7 +1,5 @@
 'use client'
 
-import Image from 'next/image'
-
 interface UserAvatarProps {
   name: string
   src?: string
@@ -10,11 +8,12 @@ interface UserAvatarProps {
 export function UserAvatar({ name, src }: UserAvatarProps) {
   if (src) {
     return (
-      <Image
+      <img
         src={src}
         alt={name ? `${name}のアイコン` : 'ユーザーアイコン'}
         width={36}
         height={36}
+        loading="lazy"
         className="h-9 w-9 rounded-full border border-white/40 object-cover shadow-sm"
       />
     )
