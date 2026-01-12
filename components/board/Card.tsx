@@ -62,7 +62,9 @@ export function Card({ card, onUpdate, onArchive }: CardProps) {
     <>
       <div className="relative">
         {isOver && (
-          <div className="absolute -top-2 left-0 right-0 h-1 bg-blue-500 rounded-full shadow-lg shadow-blue-500/50 z-10" />
+          <div className="absolute -top-3 left-0 right-0 pointer-events-none">
+            <div className="h-1 bg-blue-500 rounded-full shadow-lg shadow-blue-500/50" />
+          </div>
         )}
         <div
           ref={setNodeRef}
