@@ -17,5 +17,17 @@ export default async function BoardPage({
   }
 
   const { id } = await params
-  return <Board boardId={id} />
+  const userMetadata = user.user_metadata ?? {}
+  const userAvatarUrl =
+    userMetadata.avatar_url ?? userMetadata.picture ?? null
+  const userName =
+    userMetadata.full_name ?? userMetadata.name ?? user.email ?? ''
+
+  return (
+    <Board
+      boardId={id}
+      userAvatarUrl={userAvatarUrl}
+      userName={userName}
+    />
+  )
 }
