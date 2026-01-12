@@ -518,8 +518,11 @@ export function Board({ boardId, userAvatarUrl, userName }: BoardProps) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-gray-600">読み込み中...</div>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-gradient-to-br from-blue-500 to-indigo-600">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-white/40 border-t-white" />
+        <div className="text-sm font-medium text-white">
+          ボードを読み込んでいます...
+        </div>
       </div>
     )
   }
@@ -534,11 +537,11 @@ export function Board({ boardId, userAvatarUrl, userName }: BoardProps) {
 
   return (
     <DndContext
-        sensors={sensors}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        <div className="min-h-screen bg-gradient-to-br from-blue-500 to-indigo-600 p-6">
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="min-h-screen bg-gradient-to-br from-blue-500 to-indigo-600 p-6">
         <div className="mb-6 flex items-center justify-between">
           <div className="relative flex items-center gap-3" ref={boardMenuRef}>
             {isEditingTitle ? (
@@ -654,20 +657,20 @@ export function Board({ boardId, userAvatarUrl, userName }: BoardProps) {
         </div>
       </div>
 
-        <DragOverlay>
-          {activeCard ? (
-            <div className="bg-white rounded-lg p-3 shadow-2xl border-2 border-blue-500 w-80 rotate-6 transform scale-110 ring-4 ring-blue-200 ring-opacity-50">
-              <h3 className="text-sm font-medium text-gray-900">
-                {activeCard.title}
-              </h3>
-              {activeCard.description && (
-                <p className="text-xs text-gray-600 mt-2 line-clamp-2">
-                  {activeCard.description}
-                </p>
-              )}
-            </div>
-          ) : null}
-        </DragOverlay>
+      <DragOverlay>
+        {activeCard ? (
+          <div className="bg-white rounded-lg p-3 shadow-2xl border-2 border-blue-500 w-80 rotate-6 transform scale-110 ring-4 ring-blue-200 ring-opacity-50">
+            <h3 className="text-sm font-medium text-gray-900">
+              {activeCard.title}
+            </h3>
+            {activeCard.description && (
+              <p className="text-xs text-gray-600 mt-2 line-clamp-2">
+                {activeCard.description}
+              </p>
+            )}
+          </div>
+        ) : null}
+      </DragOverlay>
     </DndContext>
   )
 }
