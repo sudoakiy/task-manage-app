@@ -10,7 +10,7 @@ import {
 } from '@dnd-kit/sortable'
 import { Card } from './Card'
 import { AddCard } from './AddCard'
-import { MoreHorizontal, Trash } from 'lucide-react'
+import { Archive, MoreHorizontal, Trash } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useDroppable as useDroppableEnd } from '@dnd-kit/core'
@@ -20,6 +20,7 @@ interface ListProps {
   onAddCard: (listId: string, title: string) => void
   onUpdateCard: (id: string, data: Partial<CardType>) => void
   onArchiveCard: (id: string) => void
+  onArchiveAllCards: (listId: string) => void
   onDeleteList: (id: string) => void
   onUpdateList: (id: string, title: string) => void
 }
@@ -29,6 +30,7 @@ export function List({
   onAddCard,
   onUpdateCard,
   onArchiveCard,
+  onArchiveAllCards,
   onDeleteList,
   onUpdateList,
 }: ListProps) {
@@ -95,18 +97,34 @@ export function List({
             {list.title}
           </h2>
         )}
-        <div className="relative inline-block group/delete">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 hover:text-red-600 hover:bg-gray-200 transition-colors cursor-pointer"
-            onClick={() => onDeleteList(list.id)}
-          >
-            <Trash className="h-4 w-4" />
-          </Button>
-          <span className="absolute top-full left-1/2 -translate-x-1/2 px-2 py-1 bg-black/90 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover/delete:opacity-100 transition-opacity duration-100 pointer-events-none z-[9999]">
-            リストを削除する
-          </span>
+        <div className="flex items-center gap-1">
+          <div className="relative inline-block group/archive">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 hover:text-amber-600 hover:bg-gray-200 transition-colors cursor-pointer disabled:opacity-40 disabled:pointer-events-none"
+              onClick={() => onArchiveAllCards(list.id)}
+              disabled={list.cards.length === 0}
+            >
+              <Archive className="h-4 w-4" />
+            </Button>
+            <span className="absolute top-full left-1/2 -translate-x-1/2 px-2 py-1 bg-black/90 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover/archive:opacity-100 transition-opacity duration-100 pointer-events-none z-[9999]">
+              リストのカードをすべてアーカイブ
+            </span>
+          </div>
+          <div className="relative inline-block group/delete">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 hover:text-red-600 hover:bg-gray-200 transition-colors cursor-pointer"
+              onClick={() => onDeleteList(list.id)}
+            >
+              <Trash className="h-4 w-4" />
+            </Button>
+            <span className="absolute top-full left-1/2 -translate-x-1/2 px-2 py-1 bg-black/90 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover/delete:opacity-100 transition-opacity duration-100 pointer-events-none z-[9999]">
+              リストを削除する
+            </span>
+          </div>
         </div>
       </div>
 
