@@ -168,6 +168,37 @@ export function Board({ boardId, userAvatarUrl, userName }: BoardProps) {
     listId: string,
     title: string
   ) => {
+    const tempId =
+      typeof crypto !== 'undefined' && 'randomUUID' in crypto
+        ? `temp-${crypto.randomUUID()}`
+        : `temp-${Date.now()}`
+    const now = new Date()
+
+    setBoard((prev) => {
+      if (!prev) return prev
+      const position =
+        prev.lists.find((list) => list.id === listId)?.cards.length ?? 0
+      const optimisticCard: CardType = {
+        id: tempId,
+        listId,
+        title,
+        description: null,
+        dueDate: null,
+        position,
+        archived: false,
+        createdAt: now,
+        updatedAt: now,
+      }
+      return {
+        ...prev,
+        lists: prev.lists.map((list) =>
+          list.id === listId
+            ? { ...list, cards: [...list.cards, optimisticCard] }
+            : list
+        ),
+      }
+    })
+
     try {
       const res = await fetch('/api/cards', {
         method: 'POST',
@@ -183,13 +214,47 @@ export function Board({ boardId, userAvatarUrl, userName }: BoardProps) {
             ...prev,
             lists: prev.lists.map((list) =>
               list.id === listId
-                ? { ...list, cards: [...list.cards, newCard] }
+                ? {
+                    ...list,
+                    cards: list.cards.map((card) =>
+                      card.id === tempId ? newCard : card
+                    ),
+                  }
+                : list
+            ),
+          }
+        })
+      } else {
+        setBoard((prev) => {
+          if (!prev) return prev
+          return {
+            ...prev,
+            lists: prev.lists.map((list) =>
+              list.id === listId
+                ? {
+                    ...list,
+                    cards: list.cards.filter((card) => card.id !== tempId),
+                  }
                 : list
             ),
           }
         })
       }
     } catch (error) {
+      setBoard((prev) => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          lists: prev.lists.map((list) =>
+            list.id === listId
+              ? {
+                  ...list,
+                  cards: list.cards.filter((card) => card.id !== tempId),
+                }
+              : list
+          ),
+        }
+      })
       console.error('Failed to add card:', error)
     }
   }
