@@ -247,6 +247,28 @@ export function Board({ boardId, userAvatarUrl, userName }: BoardProps) {
     }
   }
 
+  const handleArchiveAllCards = async (listId: string) => {
+    try {
+      const res = await fetch(`/api/lists/${listId}/archive`, {
+        method: 'POST',
+      })
+
+      if (res.ok) {
+        setBoard((prev) => {
+          if (!prev) return prev
+          return {
+            ...prev,
+            lists: prev.lists.map((list) =>
+              list.id === listId ? { ...list, cards: [] } : list
+            ),
+          }
+        })
+      }
+    } catch (error) {
+      console.error('Failed to archive cards in list:', error)
+    }
+  }
+
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event
     const card = board?.lists
@@ -414,15 +436,16 @@ export function Board({ boardId, userAvatarUrl, userName }: BoardProps) {
           }}
         >
           {board.lists.map((list) => (
-            <List
-              key={list.id}
-              list={list}
-              onAddCard={handleAddCard}
-              onUpdateCard={handleUpdateCard}
-              onArchiveCard={handleArchiveCard}
-              onDeleteList={handleDeleteList}
-              onUpdateList={handleUpdateList}
-            />
+          <List
+            key={list.id}
+            list={list}
+            onAddCard={handleAddCard}
+            onUpdateCard={handleUpdateCard}
+            onArchiveCard={handleArchiveCard}
+            onArchiveAllCards={handleArchiveAllCards}
+            onDeleteList={handleDeleteList}
+            onUpdateList={handleUpdateList}
+          />
           ))}
           <AddList onAdd={handleAddList} />
         </div>
